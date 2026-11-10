@@ -1,4 +1,4 @@
-# Oblee
+# Salone Events (becoming Oblee)
 
 Oblee is a Dash dot that shows what events are on in Sierra Leone: when and where they are, pictures, details and ticket prices. It's for information only: nothing is bought in this dot.
 

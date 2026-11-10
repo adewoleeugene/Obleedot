@@ -53,7 +53,7 @@ function toDetails(event: EventItem): EventDetails {
 /** What to tell the person when Dash refuses a reminder. */
 function reminderError(error: unknown): string {
   if (isDashError(error, 'denied')) {
-    return 'Reminders are turned off for Oblee. Turn them on in Dash to use this.';
+    return 'Reminders are turned off for Salone Events. Turn them on in Dash to use this.';
   }
   if (isDashError(error, 'failed')) {
     return 'You already have 12 reminders coming up. Turn one off first.';
@@ -181,7 +181,7 @@ export default definePage({
         return;
       }
       const where = event.venue === TBA ? '' : ` at ${event.venue}`;
-      const text = `${event.title}: ${event.dateLabel}${where}. Find it in Oblee on Dash.`;
+      const text = `${event.title}: ${event.dateLabel}${where}. Find it in Salone Events on Dash.`;
       const url = env.SHARE_URL ? `${env.SHARE_URL.replace(/\/$/, '')}/event?event=${encodeURIComponent(event.id)}` : undefined;
       try {
         await unlessCancelled(this.dash.system.share({ title: event.title, text, url }));

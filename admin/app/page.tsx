@@ -49,7 +49,7 @@ export default async function EventsPage() {
   return (
     <main className="page">
       <div className="topbar">
-        <span className="brand">Salone Events</span>
+        <span className="brand">Oblee</span>
         <SignOutButton />
       </div>
       <header className="masthead">

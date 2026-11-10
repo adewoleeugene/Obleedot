@@ -26,12 +26,12 @@ const TICKET_TYPE_LABELS: Record<string, string> = {
 };
 
 /**
- * The line under a ticket's name: its type, when the name doesn't already say it, then its note.
- * "Table for 6" with "Includes a bottle" → "Table · Includes a bottle". Unknown types add nothing.
+ * The line under a ticket's name: its type, when the name doesn't already start with it, then its
+ * note. "Kids" (Early bird) → "Early bird"; "Early bird kids" → just its note. Unknown types add nothing.
  */
 export function ticketDetail(price: TicketPrice): string {
   const label = price.type ? TICKET_TYPE_LABELS[price.type] : undefined;
-  const type = label && label.toLowerCase() !== price.name.trim().toLowerCase() ? label : '';
+  const type = label && !price.name.trim().toLowerCase().startsWith(label.toLowerCase()) ? label : '';
   return [type, price.description].filter(Boolean).join(' · ');
 }
 

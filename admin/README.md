@@ -1,6 +1,6 @@
-# Salone Events Admin
+# Oblee Admin
 
-The team's app for adding and updating the events shown in the Salone Events dot. It's a PWA (install it from the phone's browser) and the API the dot reads from. It runs on Vercel and keeps everything in Vercel Blob.
+The team's app for adding and updating the events shown in the Oblee dot. It's a PWA (install it from the phone's browser) and the API the dot reads from. It runs on Vercel and keeps everything in Vercel Blob.
 
 ## How it works
 

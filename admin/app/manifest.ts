@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Salone Events Admin',
-    short_name: 'SE Admin',
-    description: 'Add and update the events shown in the Salone Events dot.',
+    name: 'Oblee Admin',
+    short_name: 'Oblee',
+    description: 'Add and update the events shown in the Oblee dot.',
     start_url: '/',
     display: 'standalone',
     background_color: '#0d0b0a',

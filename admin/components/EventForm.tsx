@@ -4,12 +4,22 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
-import { TICKET_TYPES, TICKET_TYPE_LABELS, inferType, takesName, ticketName } from '@/lib/tickets';
+import { TICKET_TYPES, TICKET_TYPE_LABELS, inferType, needsName, ticketName } from '@/lib/tickets';
 import { CATEGORIES, CATEGORY_LABELS, type Currency, type StoredEvent, type TicketType } from '@/lib/types';
 
 type PriceRow = { id: string; type: TicketType; name: string; description: string; amount: string; currency: Currency; soldOut: boolean };
 
-const NAME_PLACEHOLDER: Partial<Record<TicketType, string>> = { table: 'Table for 6', group: 'Group of 4', other: 'Couples' };
+const NAME_PLACEHOLDER: Record<TicketType, string> = {
+  'early-bird': 'Early bird adults',
+  regular: 'Regular kids',
+  gate: 'At the gate adults',
+  vip: 'VIP with drinks',
+  vvip: 'VVIP lounge',
+  table: 'Table for 6',
+  group: 'Group of 4',
+  student: 'Student with ID',
+  other: 'Couples',
+};
 
 type FormState = {
   title: string;
@@ -67,7 +77,7 @@ function fromEvent(event?: StoredEvent): FormState {
       id: p.id,
       type,
       // A name that just repeats the type's label isn't kept as a separate name.
-      name: takesName(type) && p.name !== TICKET_TYPE_LABELS[type] ? p.name : '',
+      name: p.name !== TICKET_TYPE_LABELS[type] ? p.name : '',
       description: p.description,
       amount: String(p.price / 100),
       currency: p.currency,
@@ -389,6 +399,9 @@ export function EventForm({ initial }: { initial?: StoredEvent }) {
                 {TICKET_TYPES.map((t) => <option key={t} value={t}>{TICKET_TYPE_LABELS[t]}</option>)}
               </select>
             </Field>
+            <Field label="Name" optional={!needsName(p.type)} htmlFor={`pn-${p.id}`} hint={needsName(p.type) ? undefined : `Leave empty to show “${TICKET_TYPE_LABELS[p.type]}”.`} error={err(`prices.${i}.name`)}>
+              <input id={`pn-${p.id}`} className="input" placeholder={NAME_PLACEHOLDER[p.type]} value={p.name} onChange={(e) => setPrice(p.id, { name: e.target.value })} maxLength={40} aria-invalid={invalid(`prices.${i}.name`)} />
+            </Field>
             <Field label="Price" htmlFor={`pa-${p.id}`} error={err(`prices.${i}.price`)}>
               <div className="amount">
                 <select className="select" value={p.currency} onChange={(e) => setPrice(p.id, { currency: e.target.value as Currency })} aria-label="Currency">
@@ -398,13 +411,6 @@ export function EventForm({ initial }: { initial?: StoredEvent }) {
                 <input id={`pa-${p.id}`} className="input" inputMode="decimal" placeholder="150" value={p.amount} onChange={(e) => setPrice(p.id, { amount: e.target.value.replace(/[^\d.]/g, '') })} />
               </div>
             </Field>
-            {takesName(p.type) && (
-              <div className="wide">
-                <Field label="Name" optional={p.type !== 'other'} htmlFor={`pn-${p.id}`} hint={p.type === 'other' ? undefined : `Leave empty to show “${TICKET_TYPE_LABELS[p.type]}”.`} error={err(`prices.${i}.name`)}>
-                  <input id={`pn-${p.id}`} className="input" placeholder={NAME_PLACEHOLDER[p.type]} value={p.name} onChange={(e) => setPrice(p.id, { name: e.target.value })} maxLength={40} aria-invalid={invalid(`prices.${i}.name`)} />
-                </Field>
-              </div>
-            )}
             <div className="wide">
               <Field label="Note" optional htmlFor={`pd-${p.id}`}>
                 <input id={`pd-${p.id}`} className="input" placeholder={p.type === 'early-bird' ? 'Until 15 Dec' : p.type === 'table' ? 'Includes a bottle' : 'Before the day'} value={p.description} onChange={(e) => setPrice(p.id, { description: e.target.value })} maxLength={60} />

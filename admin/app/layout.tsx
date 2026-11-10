@@ -10,10 +10,10 @@ const syne = localFont({ src: './fonts/Syne.woff2', weight: '400 800', variable:
 const outfit = localFont({ src: './fonts/Outfit.woff2', weight: '100 900', variable: '--font-outfit', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'Salone Events Admin',
-  description: 'Add and update the events shown in the Salone Events dot.',
-  applicationName: 'Salone Events Admin',
-  appleWebApp: { capable: true, title: 'SE Admin', statusBarStyle: 'black-translucent' },
+  title: 'Oblee Admin',
+  description: 'Add and update the events shown in the Oblee dot.',
+  applicationName: 'Oblee Admin',
+  appleWebApp: { capable: true, title: 'Oblee', statusBarStyle: 'black-translucent' },
   icons: { icon: '/icons/icon-192.png', apple: '/icons/apple-touch-icon.png' },
   robots: { index: false, follow: false },
 };

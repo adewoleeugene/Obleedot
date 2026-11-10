@@ -16,15 +16,15 @@ export const TICKET_TYPE_LABELS: Record<TicketType, string> = {
   other: 'Other',
 };
 
-/** Types that need a name of their own: "Table for 6", "Group of 4", or anything under Other. */
-export function takesName(type: TicketType): boolean {
-  return type === 'table' || type === 'group' || type === 'other';
+/** Every type can have its own name ("Early bird adults", "Table for 6"); Other must have one. */
+export function needsName(type: TicketType): boolean {
+  return type === 'other';
 }
 
-/** The name shown for a ticket: the one typed in where the type takes one, or the type's label. */
+/** The name shown for a ticket: the one typed in, or else the type's label. */
 export function ticketName(type: TicketType, name: string): string {
   const typed = name.trim();
-  if (takesName(type) && typed) return typed;
+  if (typed) return typed;
   return type === 'other' ? '' : TICKET_TYPE_LABELS[type];
 }
 
@@ -52,7 +52,9 @@ const ALIASES: Record<string, TicketType> = {
 export function inferType(name: string): TicketType {
   const key = name.trim().toLowerCase();
   if (ALIASES[key]) return ALIASES[key];
-  if (key.startsWith('table')) return 'table';
-  if (key.startsWith('group')) return 'group';
-  return 'other';
+  // "Early bird adults", "VIP table": the longest alias the name starts with.
+  const prefix = Object.keys(ALIASES)
+    .filter((alias) => key.startsWith(`${alias} `))
+    .sort((a, b) => b.length - a.length)[0];
+  return prefix ? ALIASES[prefix]! : 'other';
 }

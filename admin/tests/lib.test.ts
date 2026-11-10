@@ -108,8 +108,9 @@ describe('eventId', () => {
 });
 
 describe('ticket types', () => {
-  it('names a ticket after its type unless it takes a name of its own', () => {
-    expect(ticketName('early-bird', 'ignored')).toBe('Early bird');
+  it("uses the name typed in, or else the type's label", () => {
+    expect(ticketName('early-bird', 'Early bird kids')).toBe('Early bird kids');
+    expect(ticketName('early-bird', '')).toBe('Early bird');
     expect(ticketName('table', 'Table for 6')).toBe('Table for 6');
     expect(ticketName('table', '  ')).toBe('Table');
     expect(ticketName('other', '')).toBe('');
@@ -119,6 +120,9 @@ describe('ticket types', () => {
     expect(inferType('At the gate')).toBe('gate');
     expect(inferType('VIP')).toBe('vip');
     expect(inferType('Table for 6')).toBe('table');
+    expect(inferType('Early bird adults')).toBe('early-bird');
+    expect(inferType('VIP table')).toBe('vip');
+    expect(inferType('Earlybirds')).toBe('other');
     expect(inferType('Unlimited cocktails')).toBe('other');
   });
   it('needs a name for an Other ticket, and accepts a typed one', () => {

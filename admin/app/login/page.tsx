@@ -30,7 +30,7 @@ export default function LoginPage() {
 
   return (
     <main className="page" style={{ maxWidth: 440, paddingTop: '18vh' }}>
-      <h1 className="display">Salone Events</h1>
+      <h1 className="display">Oblee</h1>
       <p className="lede">Team sign-in. Ask your lead for the passcode.</p>
       <form onSubmit={submit} style={{ marginTop: 32 }}>
         <div className="field">

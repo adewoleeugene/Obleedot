@@ -2,8 +2,8 @@
   "id": "dot-k6WkdF4u7QfBK9kfxhVc9MmLxZG",
   "$schema": "https://unpkg.com/@monimesl/dot-runtime/dot.schema.json",
   "package": "sl.obleedot.events",
-  "name": "Salone Events",
-  "version": "0.1.1",
+  "name": "Oblee",
+  "version": "0.1.2",
   "permissions": {
     "reminders": "Remind you before an event you choose"
   },

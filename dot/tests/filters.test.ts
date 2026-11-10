@@ -104,3 +104,14 @@ describe('categories', () => {
     expect(future.categoryLabel).toBe('');
   });
 });
+
+describe('ticket types', () => {
+  it('adds the type under a ticket whose name does not already say it', async () => {
+    const { ticketDetail } = await import('../lib/format');
+    const base = { id: 't', price: 1000, currency: 'SLE' as const };
+    expect(ticketDetail({ ...base, type: 'table', name: 'Table for 6', description: 'Includes a bottle' })).toBe('Table · Includes a bottle');
+    expect(ticketDetail({ ...base, type: 'early-bird', name: 'Early bird', description: 'Until 15 Dec' })).toBe('Until 15 Dec');
+    expect(ticketDetail({ ...base, name: 'Per person', description: '' })).toBe('');
+    expect(ticketDetail({ ...base, type: 'mystery' as never, name: 'Mystery', description: 'Soon' })).toBe('Soon');
+  });
+});

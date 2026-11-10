@@ -1,7 +1,7 @@
 import { errorMessage, isDashError, unlessCancelled } from '@monimesl/dot-runtime';
 
 import { getEvent } from '../../lib/api';
-import { categoryLabel, TBA, formatDateRange, formatMoney, formatTimeRange, isSoldOut, priceLabel } from '../../lib/format';
+import { categoryLabel, ticketDetail, TBA, formatDateRange, formatMoney, formatTimeRange, isSoldOut, priceLabel } from '../../lib/format';
 import { matchChoice, nowOnPhone, reminderChoices, reminderKey, reminderText, whenLabel } from '../../lib/reminders';
 import { savedIds, setSaved } from '../../lib/saved';
 import type { EventItem } from '../../lib/types';
@@ -43,6 +43,7 @@ function toDetails(event: EventItem): EventDetails {
       id: price.id,
       name: price.name,
       description: price.description,
+      detail: ticketDetail(price),
       priceLabel: price.price === 0 ? 'Free' : formatMoney(price.price, price.currency),
       soldOut: price.soldOut === true,
     })),
@@ -52,7 +53,7 @@ function toDetails(event: EventItem): EventDetails {
 /** What to tell the person when Dash refuses a reminder. */
 function reminderError(error: unknown): string {
   if (isDashError(error, 'denied')) {
-    return 'Reminders are turned off for Salone Events. Turn them on in Dash to use this.';
+    return 'Reminders are turned off for Oblee. Turn them on in Dash to use this.';
   }
   if (isDashError(error, 'failed')) {
     return 'You already have 12 reminders coming up. Turn one off first.';
@@ -180,7 +181,7 @@ export default definePage({
         return;
       }
       const where = event.venue === TBA ? '' : ` at ${event.venue}`;
-      const text = `${event.title}: ${event.dateLabel}${where}. Find it in Salone Events on Dash.`;
+      const text = `${event.title}: ${event.dateLabel}${where}. Find it in Oblee on Dash.`;
       const url = env.SHARE_URL ? `${env.SHARE_URL.replace(/\/$/, '')}/event?event=${encodeURIComponent(event.id)}` : undefined;
       try {
         await unlessCancelled(this.dash.system.share({ title: event.title, text, url }));

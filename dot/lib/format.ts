@@ -1,4 +1,4 @@
-import type { Category, Currency, EventItem } from './types';
+import type { Category, Currency, EventItem, TicketPrice } from './types';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -13,6 +13,27 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   food: 'Food & drink',
   hangout: 'Hangouts',
 };
+
+const TICKET_TYPE_LABELS: Record<string, string> = {
+  'early-bird': 'Early bird',
+  regular: 'Regular',
+  gate: 'At the gate',
+  vip: 'VIP',
+  vvip: 'VVIP',
+  table: 'Table',
+  group: 'Group',
+  student: 'Student',
+};
+
+/**
+ * The line under a ticket's name: its type, when the name doesn't already say it, then its note.
+ * "Table for 6" with "Includes a bottle" → "Table · Includes a bottle". Unknown types add nothing.
+ */
+export function ticketDetail(price: TicketPrice): string {
+  const label = price.type ? TICKET_TYPE_LABELS[price.type] : undefined;
+  const type = label && label.toLowerCase() !== price.name.trim().toLowerCase() ? label : '';
+  return [type, price.description].filter(Boolean).join(' · ');
+}
 
 /** The category's label, or '' for one this version of the dot doesn't know yet. */
 export function categoryLabel(category: string): string {

@@ -24,7 +24,8 @@ export type EventDetails = {
   website: string;
   priceLabel: string;
   soldOut: boolean;
-  prices: { id: string; name: string; description: string; priceLabel: string; soldOut: boolean }[];
+  /** `detail` is the line under the name: its type when the name doesn't say it, then its note. */
+  prices: { id: string; name: string; description: string; detail: string; priceLabel: string; soldOut: boolean }[];
 };
 
 export default {

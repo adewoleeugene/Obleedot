@@ -20,7 +20,7 @@ export default defineDot({
     },
   },
   configs: {
-    navigationBar: { title: 'Salone Events', backgroundColor: obsidian, textColor: ivory },
+    navigationBar: { title: 'Oblee', backgroundColor: obsidian, textColor: ivory },
   },
   hooks: {
     onError(error) {

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { TICKET_TYPES } from './tickets';
 import { CATEGORIES } from './types';
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a date like 2026-12-24');
@@ -8,6 +9,7 @@ const optionalText = (max: number) => z.string().trim().max(max).optional().tran
 
 export const priceSchema = z.object({
   id: z.string().min(1).max(40),
+  type: z.enum(TICKET_TYPES).optional(),
   name: z.string().trim().min(1, 'Give the ticket a name').max(40),
   description: z.string().trim().max(60).default(''),
   price: z.number().int().min(0).max(100_000_000),

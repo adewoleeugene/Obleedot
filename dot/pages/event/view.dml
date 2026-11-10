@@ -89,7 +89,9 @@
             <View direction="row" justify="between" align="center" gap="medium" paddingTop="medium" paddingBottom="medium">
               <View gap="none" grow>
                 <Text weight="medium">{{ price.name }}</Text>
-                <Text variant="caption" tone="muted">{{ price.description }}</Text>
+                <If condition="{{ price.detail }}">
+                  <Text variant="caption" tone="muted">{{ price.detail }}</Text>
+                </If>
               </View>
               <If condition="{{ price.soldOut }}">
                 <Badge tone="danger">Sold out</Badge>

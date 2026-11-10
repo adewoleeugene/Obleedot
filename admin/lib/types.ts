@@ -15,8 +15,13 @@ export const CATEGORY_LABELS: Record<Category, string> = {
 
 export type Currency = 'SLE' | 'USD';
 
+export type TicketType = 'early-bird' | 'regular' | 'gate' | 'vip' | 'vvip' | 'table' | 'group' | 'student' | 'other';
+
 export type TicketPrice = {
   id: string;
+  /** Left out on tickets saved before types existed. */
+  type?: TicketType;
+  /** What the dot shows: the type's label, or the name typed in for Table, Group and Other. */
   name: string;
   description: string;
   /** Minor units: SLE 150 is 15000. */

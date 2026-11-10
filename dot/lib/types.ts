@@ -5,8 +5,13 @@ export type Currency = 'SLE' | 'USD';
 
 export type Category = 'music' | 'party' | 'festival' | 'culture' | 'food' | 'hangout';
 
+export type TicketType = 'early-bird' | 'regular' | 'gate' | 'vip' | 'vvip' | 'table' | 'group' | 'student' | 'other';
+
 export type TicketPrice = {
   id: string;
+  /** Left out on tickets saved before types existed, and may be one this dot doesn't know. */
+  type?: TicketType;
+  /** Always set: the type's label, or a name such as "Table for 6". */
   name: string;
   description: string;
   price: number;

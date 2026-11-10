@@ -7,6 +7,7 @@ import { planCleanup } from '@/lib/cleanup';
 import { isExpired, isUpcoming } from '@/lib/dates';
 import { eventId } from '@/lib/slug';
 import type { StoredEvent } from '@/lib/types';
+import { inferType, ticketName } from '@/lib/tickets';
 import { eventInputSchema } from '@/lib/validate';
 
 function event(id: string, date: string, extra: Partial<StoredEvent> = {}): StoredEvent {
@@ -103,5 +104,32 @@ describe('auth', () => {
 describe('eventId', () => {
   it('makes a readable id with a short random tail', () => {
     expect(eventId('Freetown Detty Rave: Word on the Street')).toMatch(/^freetown-detty-rave-word-on-the-street-[0-9a-f]{4}$/);
+  });
+});
+
+describe('ticket types', () => {
+  it('names a ticket after its type unless it takes a name of its own', () => {
+    expect(ticketName('early-bird', 'ignored')).toBe('Early bird');
+    expect(ticketName('table', 'Table for 6')).toBe('Table for 6');
+    expect(ticketName('table', '  ')).toBe('Table');
+    expect(ticketName('other', '')).toBe('');
+  });
+  it('works out the type of tickets saved before types existed', () => {
+    expect(inferType('Early bird')).toBe('early-bird');
+    expect(inferType('At the gate')).toBe('gate');
+    expect(inferType('VIP')).toBe('vip');
+    expect(inferType('Table for 6')).toBe('table');
+    expect(inferType('Unlimited cocktails')).toBe('other');
+  });
+  it('needs a name for an Other ticket, and accepts a typed one', () => {
+    const event = {
+      title: 'All Black Party', category: 'party', summary: 's', date: '2026-12-24', startTime: '20:00', endTime: '',
+      city: 'Freetown', image: 'https://x.public.blob.vercel-storage.com/p.jpg', posterPathname: 'posters/p.jpg', status: 'published',
+    };
+    const ticket = { id: 'p1', description: '', price: 1000, currency: 'SLE' };
+    const ok = (p: object) => eventInputSchema.safeParse({ ...event, prices: [{ ...ticket, ...p }] }).success;
+    expect(ok({ type: 'other', name: '' })).toBe(false);
+    expect(ok({ type: 'vip', name: 'VIP' })).toBe(true);
+    expect(ok({ type: 'nonsense', name: 'X' })).toBe(false);
   });
 });

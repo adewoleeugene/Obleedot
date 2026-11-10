@@ -12,7 +12,7 @@ The team's app for adding and updating the events shown in the Salone Events dot
 
 ## Set up on Vercel (new account for this project)
 
-Live at https://obleedot-admin.vercel.app (project `obleedot-admin`, stores `obleedot-blob` for posters and `obleedot-data` for events, all in Paris, `cdg1`). The 16 starting events and 14 posters were loaded on 2026-11-10; add new ones in the admin. The steps below are for setting it up again from scratch.
+Live at https://obleedot-admin.vercel.app (project `obleedot-admin`, stores `obleedot-blob` for posters and `obleedot-data` for events, all in Paris, `cdg1`). The 16 starting events and 14 posters were loaded on 2026-11-10; add new ones in the admin. Every push to `main` on GitHub deploys it automatically; pushes that only change the dot are skipped (`ignoreCommand` in `vercel.json`). The steps below are for setting it up again from scratch.
 
 1. Create a Vercel account for the business and a new project from this folder (push it to a new Git repository and import it, or run `npx vercel` here).
 2. In the project, open **Storage** and create two **Blob** stores (Vercel fixes a store as public or private when it is made):

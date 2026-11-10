@@ -1,4 +1,5 @@
 {
   "regions": ["cdg1"],
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- .",
   "crons": [{ "path": "/api/cron/cleanup", "schedule": "0 6 * * *" }]
 }

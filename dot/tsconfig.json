@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": [
+      "ES2022"
+    ],
+    "types": [
+      "@monimesl/dot-runtime/globals"
+    ],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": [
+    "dot.ts",
+    "pages",
+    "lib",
+    ".dot/pages.d.ts",
+    ".dot/env.d.ts"
+  ]
+}

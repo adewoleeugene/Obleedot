@@ -1,0 +1,105 @@
+<View gap="large">
+  <!-- Masthead: the headline carries the page, no label above it. -->
+  <View gap="small" paddingTop="small">
+    <Text variant="display" weight="bold" leading="tight">What's on in Salone</Text>
+    <Text tone="muted">{{ summary }}</Text>
+  </View>
+
+  <!-- Search, then one filter row: when, then what kind. Nothing is highlighted until you filter. -->
+  <View gap="medium">
+    <Input type="search" placeholder="Search events, venues or people" value="{{ query }}" clearable onChange="setQuery" />
+    <Scroll gap="small">
+      <Chip label="{{ dateChipLabel }}" icon="calendar" selected="{{ dateFilter !== 'any' }}" onTap="openDateSheet" />
+      <If condition="{{ categories.length > 1 }}">
+        <For each="{{ categories }}" item="item" key="id">
+          <Chip label="{{ item.label }}" selected="{{ item.id === category }}" data-id="{{ item.id }}" onTap="toggleCategory" />
+        </For>
+      </If>
+    </Scroll>
+  </View>
+
+  <If condition="{{ loading }}">
+    <Skeleton shape="box" height="190" />
+    <Skeleton shape="text" lines="5" />
+  </If>
+  <ElseIf condition="{{ error }}">
+    <Notice tone="danger" title="Events didn't load">{{ error }}</Notice>
+    <Button variant="secondary" onClick="load">Try again</Button>
+  </ElseIf>
+  <Else>
+    <If condition="{{ showFeatured && featured.length > 0 }}">
+      <View gap="medium">
+        <Text variant="title" weight="bold">Don't miss</Text>
+        <Carousel indicator="dots" gap="small" autoplay loop interval="5000">
+          <For each="{{ featured }}" item="card" key="id">
+            <View background="surface" radius="large" border="none" padding="none" aspect="16:9" data-id="{{ card.id }}" onTap="openEvent">
+              <If condition="{{ card.banner }}">
+                <Image src="{{ card.banner }}" alt="{{ card.title }}" aspect="16:9" fit="cover" shape="square" />
+              </If>
+              <Else>
+                <View direction="row" gap="none" height="fill">
+                  <Image src="{{ card.image }}" alt="Poster for {{ card.title }}" width="140" aspect="3:4" fit="cover" shape="square" />
+                  <View grow padding="medium" justify="between">
+                    <View gap="small">
+                      <Text variant="caption" tone="muted">{{ card.categoryLabel }}</Text>
+                      <Text variant="subtitle" weight="bold" leading="tight" maxLines="3">{{ card.title }}</Text>
+                    </View>
+                    <View gap="none">
+                      <Text variant="caption" weight="medium" maxLines="1">{{ card.dateLine }}</Text>
+                      <Text variant="caption" tone="muted" maxLines="1">{{ card.place }}</Text>
+                    </View>
+                  </View>
+                </View>
+              </Else>
+            </View>
+          </For>
+        </Carousel>
+      </View>
+    </If>
+
+    <If condition="{{ results.length === 0 }}">
+      <EmptyState icon="calendar" title="{{ emptyTitle }}" text="{{ emptyText }}">
+        <Button variant="secondary" onClick="clearFilters">Show all events</Button>
+      </EmptyState>
+    </If>
+    <Else>
+      <!-- One section per month, each a run of hairline rows. -->
+      <For each="{{ sections }}" item="section" key="id">
+        <View gap="none">
+          <Text variant="title" weight="bold" paddingBottom="small">{{ section.label }}</Text>
+          <For each="{{ section.events }}" item="card" index="i" key="id">
+            <If condition="{{ i > 0 }}">
+              <Divider />
+            </If>
+            <View direction="row" gap="medium" align="center" paddingTop="medium" paddingBottom="medium" data-id="{{ card.id }}" onTap="openEvent">
+              <Image src="{{ card.image }}" alt="" width="60" aspect="3:4" fit="cover" />
+              <View gap="none" grow>
+                <Text variant="caption" weight="bold" tone="muted">{{ card.dateLine }}</Text>
+                <Text weight="bold" leading="tight" maxLines="2" paddingTop="small" paddingBottom="small">{{ card.title }}</Text>
+                <Text variant="caption" tone="muted" maxLines="1">{{ card.metaLine }}</Text>
+              </View>
+              <If condition="{{ card.soldOut }}">
+                <Badge tone="danger">Sold out</Badge>
+              </If>
+            </View>
+          </For>
+        </View>
+      </For>
+    </Else>
+
+    <If condition="{{ sampleData }}">
+      <Text variant="caption" tone="muted" align="center">Showing sample events. Set API_URL in .env to load yours.</Text>
+    </If>
+  </Else>
+
+  <Sheet open="{{ dateSheetOpen }}" title="When" showCloseIcon onClose="closeDateSheet">
+    <View gap="large">
+      <RadioGroup value="{{ dateFilter }}" onChange="chooseDate">
+        <For each="{{ dateOptions }}" item="item" key="id">
+          <Radio value="{{ item.id }}" label="{{ item.label }}" />
+        </For>
+      </RadioGroup>
+      <Button variant="secondary" onClick="pickDate">{{ pickedLabel ? 'Picked: ' + pickedLabel : 'Pick a specific date' }}</Button>
+    </View>
+  </Sheet>
+</View>

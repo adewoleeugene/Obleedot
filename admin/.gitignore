@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.env*.local
+.vercel
+next-env.d.ts
+*.tsbuildinfo
+
+# Local storage fallback (no Blob token, not production)
+.local-data/
+public/local-posters/

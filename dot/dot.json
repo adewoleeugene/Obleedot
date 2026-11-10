@@ -1,0 +1,10 @@
+{
+  "id": "<monime-Internal-Id>",
+  "$schema": "https://unpkg.com/@monimesl/dot-runtime/dot.schema.json",
+  "package": "sl.example.events",
+  "name": "Salone Events",
+  "version": "0.1.0",
+  "dash": {
+    "minApiVersion": "1.0"
+  }
+}

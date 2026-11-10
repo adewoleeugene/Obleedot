@@ -1,0 +1,123 @@
+<View gap="large">
+  <Toast message="{{ toast }}" tone="danger" onHide="clearToast" />
+
+  <If condition="{{ loading }}">
+    <Skeleton shape="box" height="360" />
+    <Skeleton shape="text" lines="5" />
+  </If>
+  <ElseIf condition="{{ notFound }}">
+    <EmptyState icon="calendar" title="Event not found" text="It may have ended or been taken down.">
+      <Button variant="secondary" onClick="backToEvents">See what's on</Button>
+    </EmptyState>
+  </ElseIf>
+  <ElseIf condition="{{ error }}">
+    <Notice tone="danger" title="This event didn't load">{{ error }}</Notice>
+    <Button variant="secondary" onClick="load">Try again</Button>
+  </ElseIf>
+  <ElseIf condition="{{ event }}">
+    <!-- The poster is the hero, shown whole on a quiet tonal panel. -->
+    <View background="surface" radius="large" padding="none">
+      <Image src="{{ event.image }}" alt="Poster for {{ event.title }}" aspect="{{ posterAspect }}" fit="contain" shape="square" onLoad="posterLoaded" />
+    </View>
+
+    <View gap="small">
+      <Text variant="display" weight="bold" leading="tight">{{ event.title }}</Text>
+      <View direction="row" gap="small" align="center" wrap>
+        <Text tone="muted">{{ event.kicker }}</Text>
+        <If condition="{{ event.soldOut }}">
+          <Badge tone="danger">Sold out</Badge>
+        </If>
+      </View>
+      <Text variant="lead">{{ event.summary }}</Text>
+    </View>
+
+    <!-- When and where: the facts people come for, as hairline rows with icons. -->
+    <View gap="none" border="subtle" radius="large" background="surface">
+      <View direction="row" gap="medium" align="center" padding="medium">
+        <Icon name="calendar" tone="muted" />
+        <View gap="none" grow>
+          <Text weight="medium">{{ event.dateLabel }}</Text>
+          <Text variant="caption" tone="muted">{{ event.timeLabel }}</Text>
+        </View>
+      </View>
+      <Divider />
+      <View direction="row" gap="medium" align="center" padding="medium">
+        <Icon name="location" tone="muted" />
+        <View gap="none" grow>
+          <Text weight="medium">{{ event.venue }}</Text>
+          <If condition="{{ event.address }}">
+            <Text variant="caption" tone="muted">{{ event.address }}</Text>
+          </If>
+        </View>
+      </View>
+      <If condition="{{ event.dressCode }}">
+        <Divider />
+        <View direction="row" gap="medium" align="center" padding="medium">
+          <Icon name="star" tone="muted" />
+          <View gap="none" grow>
+            <Text weight="medium">{{ event.dressCode }}</Text>
+            <Text variant="caption" tone="muted">Dress code</Text>
+          </View>
+        </View>
+      </If>
+      <Divider />
+      <View direction="row" gap="medium" align="center" padding="medium">
+        <Icon name="ticket" tone="muted" />
+        <View gap="none" grow>
+          <Text weight="medium">{{ event.priceLabel }}</Text>
+          <Text variant="caption" tone="muted">Tickets aren't sold in this dot</Text>
+        </View>
+      </View>
+    </View>
+
+    <View gap="small">
+      <Text variant="title" weight="bold">About</Text>
+      <RichText markdown="{{ event.description }}" />
+      <If condition="{{ event.organizer }}">
+        <Text variant="caption" tone="muted">Presented by {{ event.organizer }}</Text>
+      </If>
+    </View>
+
+    <If condition="{{ event.prices.length > 0 }}">
+      <View gap="small">
+        <Text variant="title" weight="bold">Ticket prices</Text>
+        <View gap="none">
+          <For each="{{ event.prices }}" item="price" index="i" key="id">
+            <If condition="{{ i > 0 }}">
+              <Divider />
+            </If>
+            <View direction="row" justify="between" align="center" gap="medium" paddingTop="medium" paddingBottom="medium">
+              <View gap="none" grow>
+                <Text weight="medium">{{ price.name }}</Text>
+                <Text variant="caption" tone="muted">{{ price.description }}</Text>
+              </View>
+              <If condition="{{ price.soldOut }}">
+                <Badge tone="danger">Sold out</Badge>
+              </If>
+              <Else>
+                <Text variant="subtitle" weight="bold" numeric>{{ price.priceLabel }}</Text>
+              </Else>
+            </View>
+          </For>
+        </View>
+        <Text variant="caption" tone="muted">From the organiser's poster. Prices may change.</Text>
+      </View>
+    </If>
+
+    <If condition="{{ event.phone || event.website }}">
+      <View gap="small">
+        <Text variant="title" weight="bold">Contact</Text>
+        <If condition="{{ event.phone }}">
+          <Button variant="secondary" onClick="call">Call {{ event.phoneLabel }}</Button>
+        </If>
+        <If condition="{{ event.website }}">
+          <Text><Link href="{{ event.website }}">Visit the organiser's website</Link></Text>
+        </If>
+      </View>
+    </If>
+
+    <Footer>
+      <Button onClick="share">Share this event</Button>
+    </Footer>
+  </ElseIf>
+</View>

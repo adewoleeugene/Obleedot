@@ -1,0 +1,27 @@
+{
+  "name": "salone-events-admin",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "seed": "node --env-file=.env.local --experimental-strip-types scripts/seed.ts"
+  },
+  "dependencies": {
+    "@vercel/blob": "2.9.0",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.0"
+  }
+}

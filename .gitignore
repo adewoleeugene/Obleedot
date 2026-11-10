@@ -1,0 +1,13 @@
+node_modules/
+.DS_Store
+# Dot
+dot/dist/
+dot/.dot/
+# Admin
+admin/.next/
+admin/.env*.local
+admin/.vercel
+admin/next-env.d.ts
+admin/*.tsbuildinfo
+admin/.local-data/
+admin/public/local-posters/

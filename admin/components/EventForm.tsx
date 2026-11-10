@@ -82,6 +82,37 @@ async function resizePoster(file: File): Promise<Blob> {
   );
 }
 
+type UploadResult = { url?: string; pathname?: string; error?: string };
+
+/** Posts the poster with XMLHttpRequest, because fetch can't report upload progress. */
+function uploadWithProgress(body: FormData, onProgress: (percent: number) => void): Promise<{ ok: boolean; result: UploadResult }> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/admin/posters');
+    xhr.responseType = 'json';
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
+    };
+    xhr.onload = () => resolve({ ok: xhr.status >= 200 && xhr.status < 300, result: (xhr.response ?? {}) as UploadResult });
+    xhr.onerror = () => reject(new Error("The upload didn't go through. Check your connection and try again."));
+    xhr.ontimeout = () => reject(new Error('The upload took too long. Check your connection and try again.'));
+    xhr.timeout = 120_000;
+    xhr.send(body);
+  });
+}
+
+function sizeLabel(bytes: number): string {
+  return bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
+/** Where the poster upload is: shown on the poster itself, so nobody has to guess. */
+type Upload =
+  | { stage: 'idle' }
+  | { stage: 'preparing'; preview: string }
+  | { stage: 'uploading'; preview: string; percent: number }
+  | { stage: 'done'; size: number }
+  | { stage: 'failed'; error: string; file: File };
+
 function Field({ label, optional, hint, error, children, htmlFor }: {
   label: string;
   optional?: boolean;
@@ -108,7 +139,8 @@ export function EventForm({ initial }: { initial?: StoredEvent }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState('');
   const [saving, setSaving] = useState<'draft' | 'published' | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [upload, setUpload] = useState<Upload>({ stage: 'idle' });
+  const uploading = upload.stage === 'preparing' || upload.stage === 'uploading';
   const fileInput = useRef<HTMLInputElement>(null);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((f) => ({ ...f, [key]: value }));
@@ -116,23 +148,27 @@ export function EventForm({ initial }: { initial?: StoredEvent }) {
     setForm((f) => ({ ...f, prices: f.prices.map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
 
   async function choosePoster(file: File | undefined) {
-    if (!file) return;
-    setUploading(true);
-    setNotice('');
+    if (!file || uploading) return;
+    if (fileInput.current) fileInput.current.value = '';
+    // Show what they picked straight away, before it's shrunk or sent.
+    const preview = URL.createObjectURL(file);
+    setUpload({ stage: 'preparing', preview });
     try {
-      const resized = await resizePoster(file);
+      const resized = await resizePoster(file).catch(() => {
+        throw new Error("That file couldn't be read as a picture. Try a JPEG, PNG or WebP.");
+      });
       const body = new FormData();
       body.append('poster', new File([resized], 'poster.jpg', { type: 'image/jpeg' }));
-      const response = await fetch('/api/admin/posters', { method: 'POST', body });
-      const result = (await response.json()) as { url?: string; pathname?: string; error?: string };
-      if (!response.ok || !result.url || !result.pathname) throw new Error(result.error ?? 'Upload failed');
+      setUpload({ stage: 'uploading', preview, percent: 0 });
+      const { ok, result } = await uploadWithProgress(body, (percent) => setUpload({ stage: 'uploading', preview, percent }));
+      if (!ok || !result.url || !result.pathname) throw new Error(result.error ?? "The upload didn't finish. Try again.");
       setForm((f) => ({ ...f, image: result.url!, posterPathname: result.pathname! }));
       setErrors((e) => ({ ...e, image: '', posterPathname: '' }));
+      setUpload({ stage: 'done', size: resized.size });
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : 'Upload failed. Try again.');
+      setUpload({ stage: 'failed', error: error instanceof Error ? error.message : "The upload didn't finish. Try again.", file });
     } finally {
-      setUploading(false);
-      if (fileInput.current) fileInput.current.value = '';
+      URL.revokeObjectURL(preview);
     }
   }
 
@@ -222,23 +258,49 @@ export function EventForm({ initial }: { initial?: StoredEvent }) {
         <h2 className="section-title">Poster</h2>
         <p className="section-hint">Shown whole on the event page. Portrait or square both work.</p>
         <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => choosePoster(e.target.files?.[0])} />
-        {form.image ? (
-          <>
-            <div className="poster-preview">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={form.image} alt="Poster preview" />
+        {uploading ? (
+          // The picked photo, dimmed, with where the upload is over it.
+          <div className="poster-preview is-busy">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={upload.preview} alt="" />
+            <div className="upload-overlay">
+              <strong>{upload.stage === 'preparing' ? 'Getting it ready…' : `Uploading ${upload.percent}%`}</strong>
+              <div className="upload-track" role="progressbar" aria-label="Poster upload" aria-valuemin={0} aria-valuemax={100} aria-valuenow={upload.stage === 'uploading' ? upload.percent : 0}>
+                <div className="upload-fill" style={{ width: `${upload.stage === 'uploading' ? upload.percent : 4}%` }} />
+              </div>
             </div>
-            <div className="poster-actions">
-              <button type="button" className="btn btn-small" onClick={() => fileInput.current?.click()} disabled={uploading}>
-                {uploading ? 'Uploading…' : 'Replace poster'}
-              </button>
-            </div>
-          </>
+          </div>
+        ) : form.image ? (
+          <div className="poster-preview">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={form.image} alt="Poster preview" />
+          </div>
         ) : (
-          <button type="button" className="poster-drop" onClick={() => fileInput.current?.click()} disabled={uploading} aria-invalid={invalid('image')}>
-            <strong style={{ color: 'var(--text)' }}>{uploading ? 'Uploading…' : 'Choose a poster'}</strong>
+          <button type="button" className="poster-drop" onClick={() => fileInput.current?.click()} aria-invalid={invalid('image')}>
+            <strong style={{ color: 'var(--text)' }}>Choose a poster</strong>
             <span>JPEG, PNG or WebP. We shrink it before uploading.</span>
           </button>
+        )}
+
+        {/* Status in words, announced to screen readers too. */}
+        <div className="upload-status" aria-live="polite">
+          {upload.stage === 'done' && (
+            <p className="upload-ok"><span aria-hidden="true">✓</span> Poster uploaded · {sizeLabel(upload.size)}</p>
+          )}
+          {upload.stage === 'failed' && (
+            <div className="upload-failed" role="alert">
+              <p>{upload.error}{form.image ? ' Your previous poster is kept.' : ''}</p>
+              <button type="button" className="btn btn-small" onClick={() => choosePoster(upload.file)}>Try again</button>
+            </div>
+          )}
+        </div>
+
+        {(form.image || uploading) && (
+          <div className="poster-actions">
+            <button type="button" className="btn btn-small" onClick={() => fileInput.current?.click()} disabled={uploading}>
+              {form.image ? 'Replace poster' : 'Choose another'}
+            </button>
+          </div>
         )}
         {err('image') && <p className="error">{err('image')}</p>}
       </section>
@@ -278,7 +340,7 @@ export function EventForm({ initial }: { initial?: StoredEvent }) {
           Runs over several days
         </label>
         <div className="grid-2" style={{ marginTop: 12 }}>
-          <Field label="Starts" optional htmlFor="startTime" hint="Leave empty if not announced." error={err('startTime')}>
+          <Field label="Starts" htmlFor="startTime" error={err('startTime')}>
             <input id="startTime" type="time" className="input" value={form.startTime} onChange={(e) => set('startTime', e.target.value)} aria-invalid={invalid('startTime')} />
           </Field>
           {!form.tillLate && (

@@ -24,7 +24,8 @@ export const eventInputSchema = z
     description: z.string().trim().max(3000).default(''),
     date,
     endDate: z.union([z.literal(''), date]).optional().transform((v) => v || undefined),
-    startTime: time,
+    // Required: people need to know when to turn up.
+    startTime: z.string().min(1, 'Add the start time').regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use a time like 19:30'),
     endTime: z.union([time, z.literal('late')]),
     venue: z.string().trim().max(80).default(''),
     address: z.string().trim().max(120).default(''),
@@ -45,8 +46,7 @@ export const eventInputSchema = z
     prices: z.array(priceSchema).max(8).default([]),
     status: z.enum(['draft', 'published']),
   })
-  .refine((e) => !e.endDate || e.endDate >= e.date, { message: 'The end date is before the start date', path: ['endDate'] })
-  .refine((e) => e.endTime === '' || e.startTime !== '', { message: 'Add a start time first', path: ['startTime'] });
+  .refine((e) => !e.endDate || e.endDate >= e.date, { message: 'The end date is before the start date', path: ['endDate'] });
 
 export type EventInput = z.infer<typeof eventInputSchema>;
 

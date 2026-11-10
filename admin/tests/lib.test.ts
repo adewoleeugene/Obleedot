@@ -76,6 +76,8 @@ describe('validation', () => {
   it('rejects an end date before the start, and an end time with no start', () => {
     expect(eventInputSchema.safeParse({ ...valid, endDate: '2026-12-20' }).success).toBe(false);
     expect(eventInputSchema.safeParse({ ...valid, startTime: '', endTime: '23:00' }).success).toBe(false);
+    // The start time is required, even with no end time.
+    expect(eventInputSchema.safeParse({ ...valid, startTime: '', endTime: '' }).success).toBe(false);
   });
   it('requires a poster', () => {
     expect(eventInputSchema.safeParse({ ...valid, image: '', posterPathname: '' }).success).toBe(false);

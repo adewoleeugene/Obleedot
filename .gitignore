@@ -11,3 +11,6 @@ admin/next-env.d.ts
 admin/*.tsbuildinfo
 admin/.local-data/
 admin/public/local-posters/
+
+# Local Claude Code skills
+.claude/

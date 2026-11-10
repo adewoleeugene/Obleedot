@@ -1,4 +1,9 @@
-// All events live in one private JSON blob; posters are public blobs. Every events write sends
+// Vercel fixes a Blob store as public or private when it is made, so this uses two:
+// - the events file lives in a private store (BLOB_STORE_ID, signed in with Vercel's OIDC token), so
+//   drafts stay private;
+// - posters live in a public store (BLOB_READ_WRITE_TOKEN), so the dot can load them.
+// The SDK prefers OIDC + BLOB_STORE_ID whenever both are present, so every poster call passes its
+// token explicitly and never lands in the private store. Every events write sends
 // the ETag it read, so if a teammate saved in between, the write fails and is retried on the
 // fresh copy instead of overwriting their change.
 //
@@ -8,12 +13,13 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { BlobPreconditionFailedError, del, get, list, put } from '@vercel/blob';
+import { BlobNotFoundError, BlobPreconditionFailedError, del, get, head, list, put } from '@vercel/blob';
 
 import type { StoredEvent } from './types';
 
 const EVENTS_PATH = 'data/events.json';
 const LOCAL = !process.env.BLOB_READ_WRITE_TOKEN && process.env.NODE_ENV !== 'production';
+const POSTERS = { token: process.env.BLOB_READ_WRITE_TOKEN };
 const LOCAL_EVENTS = path.join(process.cwd(), '.local-data', 'events.json');
 const LOCAL_POSTERS = path.join(process.cwd(), 'public', 'local-posters');
 
@@ -22,17 +28,34 @@ export type PosterBlob = { pathname: string; uploadedAt: Date };
 
 class ConflictError extends Error {}
 
+function requireDataToken(): void {
+  if (!LOCAL && !process.env.BLOB_STORE_ID) {
+    throw new Error('BLOB_STORE_ID is not set: connect the private Blob store to the project');
+  }
+}
+
 export async function readEvents(): Promise<Snapshot> {
+  requireDataToken();
   if (LOCAL) {
     const text = await readFile(LOCAL_EVENTS, 'utf8').catch(() => null);
     return { events: text ? (JSON.parse(text) as StoredEvent[]) : [], etag: text ? String(text.length) : null };
+  }
+  // The ETag comes from head(), in the form put({ ifMatch }) checks; the download's HTTP ETag header
+  // is formatted differently and never matches. Reading it first is safe: if someone saves before
+  // the download, our write is refused and retried rather than overwriting their change.
+  const meta = await head(EVENTS_PATH).catch((error: unknown) => {
+    if (error instanceof BlobNotFoundError) return null;
+    throw error;
+  });
+  if (!meta) {
+    return { events: [], etag: null };
   }
   const result = await get(EVENTS_PATH, { access: 'private', useCache: false });
   if (!result || result.statusCode !== 200) {
     return { events: [], etag: null };
   }
   const parsed: unknown = JSON.parse(await new Response(result.stream).text());
-  return { events: Array.isArray(parsed) ? (parsed as StoredEvent[]) : [], etag: result.blob.etag };
+  return { events: Array.isArray(parsed) ? (parsed as StoredEvent[]) : [], etag: meta.etag };
 }
 
 async function writeEvents(events: StoredEvent[], etag: string | null): Promise<void> {
@@ -84,7 +107,7 @@ export async function savePoster(file: File, extension: string, origin: string):
     await writeFile(path.join(LOCAL_POSTERS, name), Buffer.from(await file.arrayBuffer()));
     return { url: `${origin}/local-posters/${name}`, pathname: `posters/${name}` };
   }
-  const blob = await put(`posters/poster.${extension}`, file, { access: 'public', addRandomSuffix: true, contentType: file.type });
+  const blob = await put(`posters/poster.${extension}`, file, { ...POSTERS, access: 'public', addRandomSuffix: true, contentType: file.type });
   return { url: blob.url, pathname: blob.pathname };
 }
 
@@ -98,7 +121,7 @@ export async function listPosters(): Promise<PosterBlob[]> {
   const posters: PosterBlob[] = [];
   let cursor: string | undefined;
   do {
-    const page = await list({ prefix: 'posters/', cursor, limit: 1000 });
+    const page = await list({ ...POSTERS, prefix: 'posters/', cursor, limit: 1000 });
     posters.push(...page.blobs.map((blob) => ({ pathname: blob.pathname, uploadedAt: new Date(blob.uploadedAt) })));
     cursor = page.hasMore ? page.cursor : undefined;
   } while (cursor);
@@ -112,5 +135,5 @@ export async function deleteBlobs(pathnames: string[]): Promise<void> {
     await Promise.all(unique.map((p) => rm(path.join(LOCAL_POSTERS, path.basename(p)), { force: true })));
     return;
   }
-  await del(unique);
+  await del(unique, POSTERS);
 }

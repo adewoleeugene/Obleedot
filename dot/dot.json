@@ -4,6 +4,12 @@
   "package": "sl.example.events",
   "name": "Salone Events",
   "version": "0.1.0",
+  "network": {
+    "hosts": [
+      "obleedot-admin.vercel.app",
+      "p0zsiwzy8scxn2v5.public.blob.vercel-storage.com"
+    ]
+  },
   "dash": {
     "minApiVersion": "1.0"
   }

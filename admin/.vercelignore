@@ -1,0 +1,6 @@
+# Local-only: never uploaded to Vercel
+.env*.local
+.local-data/
+public/local-posters/
+# Run from your machine, not on Vercel
+tests/

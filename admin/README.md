@@ -12,15 +12,18 @@ The team's app for adding and updating the events shown in the Salone Events dot
 
 ## Set up on Vercel (new account for this project)
 
+Live at https://obleedot-admin.vercel.app (project `obleedot-admin`, stores `obleedot-blob` for posters and `obleedot-data` for events, all in Paris, `cdg1`). The 16 starting events and 14 posters were loaded on 2026-11-10; add new ones in the admin. The steps below are for setting it up again from scratch.
+
 1. Create a Vercel account for the business and a new project from this folder (push it to a new Git repository and import it, or run `npx vercel` here).
-2. In the project, open **Storage**, create a **Blob** store and connect it to the project. Vercel adds `BLOB_READ_WRITE_TOKEN`.
+2. In the project, open **Storage** and create two **Blob** stores (Vercel fixes a store as public or private when it is made):
+   - a **public** store for posters, connected with the default prefix, so Vercel adds `BLOB_READ_WRITE_TOKEN`;
+   - a **private** store for the events file. Vercel adds `BLOB_STORE_ID`, and the app signs in to it with Vercel's built-in OIDC token, so there is no secret to manage.
 3. In **Settings → Environment Variables**, add:
    - `ADMIN_PASSCODE`: the passcode your team types. Use a long phrase.
    - `SESSION_SECRET`: run `openssl rand -hex 32` and paste the result.
    - `CRON_SECRET`: run `openssl rand -hex 32` again. Vercel sends it to the clean-up job.
 4. Deploy.
-5. Load the current events once: run `npx vercel env pull .env.local`, then `npm run seed`. It uploads the 14 posters and 16 events from the dot's sample data, and refuses to run if events already exist.
-6. On each teammate's phone, open the site and choose **Add to Home Screen**.
+5. On each teammate's phone, open the site and choose **Add to Home Screen**.
 
 ## Point the dot at it
 

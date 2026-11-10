@@ -4,6 +4,7 @@ import { listEvents, today as todayOnPhone, usingSampleData } from '../../lib/ap
 import { byMonth, categoriesFor, filterCards, toCard, type EventCard } from '../../lib/cards';
 import { dateOptionsFor, matchesDate } from '../../lib/dates';
 import { formatShortDate, weekdayDate } from '../../lib/format';
+import { pruneSaved, savedIds } from '../../lib/saved';
 import type { EventItem } from '../../lib/types';
 import state from './state';
 
@@ -40,6 +41,12 @@ function view(cards: readonly EventCard[], f: Filters) {
   };
 }
 
+/** Saved ids → their cards, in saved order, skipping any that have ended. */
+function savedCardsFor(cards: readonly EventCard[], ids: readonly string[]): EventCard[] {
+  const byId = new Map(cards.map((card) => [card.id, card]));
+  return ids.flatMap((id) => byId.get(id) ?? []);
+}
+
 function summarise(events: readonly EventItem[]): string {
   if (events.length === 0) {
     return 'Nothing on right now';
@@ -61,6 +68,10 @@ export default definePage({
     },
     async onRefresh() {
       await this.actions.load();
+    },
+    // Coming back from an event page, where the person may have saved or unsaved it.
+    async onShow() {
+      await this.actions.refreshSaved();
     },
   },
   mutations: {
@@ -117,10 +128,22 @@ export default definePage({
             ...view(cards, { query: current.query, category, dateFilter, pickedLabel, today, dateOptions, allSummary: summarise(events) }),
           };
         });
+        // Events that ended or were taken down drop out of the saved list for good.
+        const kept = await pruneSaved(this.dash, new Set(cards.map((card) => card.id))).catch(() => [] as string[]);
+        this.setState({ savedCards: savedCardsFor(cards, kept) });
       } catch (error) {
         this.setState({ error: errorMessage(error) || "We couldn't load events." });
       } finally {
         this.setState({ loading: false });
+      }
+    },
+    async refreshSaved() {
+      if (this.state.cards.length === 0) {
+        return;
+      }
+      const ids = await savedIds(this.dash).catch(() => null);
+      if (ids) {
+        this.setState((current) => ({ savedCards: savedCardsFor(current.cards, ids) }));
       }
     },
     async pickDate(state) {

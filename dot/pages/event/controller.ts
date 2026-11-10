@@ -2,6 +2,8 @@ import { errorMessage, isDashError, unlessCancelled } from '@monimesl/dot-runtim
 
 import { getEvent } from '../../lib/api';
 import { CATEGORY_LABELS, TBA, formatDateRange, formatMoney, formatTimeRange, isSoldOut, priceLabel } from '../../lib/format';
+import { matchChoice, nowOnPhone, reminderChoices, reminderKey, reminderText, whenLabel } from '../../lib/reminders';
+import { savedIds, setSaved } from '../../lib/saved';
 import type { EventItem } from '../../lib/types';
 import state, { type EventDetails } from './state';
 
@@ -18,6 +20,8 @@ function toDetails(event: EventItem): EventDetails {
   return {
     id: event.id,
     title: event.title,
+    date: event.date,
+    startTime: event.startTime,
     image: event.image,
     categoryLabel: CATEGORY_LABELS[event.category],
     kicker: [CATEGORY_LABELS[event.category], event.ageLimit].filter(Boolean).join(' · '),
@@ -45,6 +49,17 @@ function toDetails(event: EventItem): EventDetails {
   };
 }
 
+/** What to tell the person when Dash refuses a reminder. */
+function reminderError(error: unknown): string {
+  if (isDashError(error, 'denied')) {
+    return 'Reminders are turned off for Salone Events. Turn them on in Dash to use this.';
+  }
+  if (isDashError(error, 'failed')) {
+    return 'You already have 12 reminders coming up. Turn one off first.';
+  }
+  return errorMessage(error) || "The reminder wasn't set.";
+}
+
 export default definePage({
   initialState: state,
   // A share link such as https://dashit.to/d/<code>/event?event=drizilik-audacity opens this page.
@@ -60,6 +75,8 @@ export default definePage({
   },
   mutations: {
     clearToast: () => ({ toast: '' }),
+    openReminderSheet: () => ({ reminderSheetOpen: true }),
+    closeReminderSheet: () => ({ reminderSheetOpen: false }),
     /** Picks the panel shape closest to the poster's, so it shows whole with no empty bands. */
     posterLoaded: (_state, event: DotEvent<{ width: number; height: number }>) => {
       const ratio = event.detail.width / event.detail.height;
@@ -88,11 +105,73 @@ export default definePage({
           this.setState({ notFound: true, event: null });
           return;
         }
-        this.setState({ event: toDetails(event) });
+        const details = toDetails(event);
+        this.setState({ event: details, reminderChoices: reminderChoices(details, nowOnPhone()) });
+        await this.actions.loadPersonal();
       } catch (error) {
         this.setState({ error: errorMessage(error) || "We couldn't load this event." });
       } finally {
         this.setState({ loading: false });
+      }
+    },
+    /** Whether it's saved and which reminder is set. Neither is worth an error if Dash can't say. */
+    async loadPersonal(state) {
+      if (!state.event) {
+        return;
+      }
+      const id = state.event.id;
+      const [saved, reminders] = await Promise.all([
+        savedIds(this.dash).catch(() => [] as string[]),
+        this.dash.reminders.list().catch(() => []),
+      ]);
+      const existing = reminders.find((reminder) => reminder.key === reminderKey(id));
+      this.setState((current) => ({
+        saved: saved.includes(id),
+        reminderChoice: existing ? matchChoice(current.reminderChoices, existing.schedule) : '',
+        reminderWhen: existing ? whenLabel(existing.schedule.start, existing.schedule.time ?? '09:00') : '',
+      }));
+    },
+    async toggleSave(state) {
+      if (!state.event) {
+        return;
+      }
+      const saved = !state.saved;
+      this.setState({ saved });
+      try {
+        await setSaved(this.dash, state.event.id, saved);
+      } catch (error) {
+        this.setState({ saved: !saved, toast: errorMessage(error) || "That didn't save.", toastTone: 'danger' });
+      }
+    },
+    async setReminder(state, event: ValueEvent) {
+      const details = state.event;
+      const choice = state.reminderChoices.find((item) => item.id === event.detail.value);
+      if (!details || !choice) {
+        return;
+      }
+      // Only show it as set once Dash says so: the first time, Dash asks the person first.
+      const when = whenLabel(choice.date, choice.time);
+      try {
+        await this.dash.reminders.set({
+          key: reminderKey(details.id),
+          ...reminderText(details, choice),
+          page: `/event?event=${encodeURIComponent(details.id)}`,
+          schedule: { start: choice.date, time: choice.time },
+        });
+        this.setState({ reminderChoice: choice.id, reminderWhen: when, reminderSheetOpen: false, toast: `We'll remind you ${when}`, toastTone: 'success' });
+      } catch (error) {
+        this.setState({ toast: reminderError(error), toastTone: 'danger' });
+      }
+    },
+    async removeReminder(state) {
+      if (!state.event) {
+        return;
+      }
+      try {
+        await this.dash.reminders.cancel(reminderKey(state.event.id));
+        this.setState({ reminderChoice: '', reminderWhen: '', reminderSheetOpen: false, toast: 'Reminder turned off', toastTone: 'success' });
+      } catch (error) {
+        this.setState({ toast: reminderError(error), toastTone: 'danger' });
       }
     },
     async share(state) {
@@ -106,7 +185,7 @@ export default definePage({
       try {
         await unlessCancelled(this.dash.system.share({ title: event.title, text, url }));
       } catch (error) {
-        this.setState({ toast: errorMessage(error) });
+        this.setState({ toast: errorMessage(error), toastTone: 'danger' });
       }
     },
     async call(state) {
@@ -117,7 +196,7 @@ export default definePage({
         await unlessCancelled(this.dash.system.dial(state.event.phone));
       } catch (error) {
         if (!isDashError(error, 'cancelled')) {
-          this.setState({ toast: errorMessage(error) });
+          this.setState({ toast: errorMessage(error), toastTone: 'danger' });
         }
       }
     },

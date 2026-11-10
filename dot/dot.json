@@ -1,9 +1,12 @@
 {
   "id": "<monime-Internal-Id>",
   "$schema": "https://unpkg.com/@monimesl/dot-runtime/dot.schema.json",
-  "package": "sl.example.events",
+  "package": "sl.obleedot.events",
   "name": "Salone Events",
   "version": "0.1.0",
+  "permissions": {
+    "reminders": "Remind you before an event you choose"
+  },
   "network": {
     "hosts": [
       "obleedot-admin.vercel.app",

@@ -1,5 +1,5 @@
 <View gap="large">
-  <Toast message="{{ toast }}" tone="danger" onHide="clearToast" />
+  <Toast message="{{ toast }}" tone="{{ toastTone }}" onHide="clearToast" />
 
   <If condition="{{ loading }}">
     <Skeleton shape="box" height="360" />
@@ -116,8 +116,39 @@
       </View>
     </If>
 
+    <!-- Share stays quiet: a plain row, so the footer's Remind me is the only accent. -->
+    <View direction="row" justify="center" align="center" gap="small" paddingTop="small" paddingBottom="small" onTap="share">
+      <Icon name="share" tone="muted" size="small" />
+      <Text weight="medium">Share this event</Text>
+    </View>
+
+    <!-- Keep it for later: save it, and get a nudge before it starts. Gold only on Remind me, the
+         one thing to do here; once a reminder is set both buttons go quiet. -->
     <Footer>
-      <Button onClick="share">Share this event</Button>
+      <View direction="row" gap="small">
+        <View grow>
+          <Button variant="secondary" onClick="toggleSave"><Icon name="{{ saved ? 'check' : 'heart' }}" /> {{ saved ? 'Saved' : 'Save' }}</Button>
+        </View>
+        <If condition="{{ reminderChoices.length > 0 || reminderChoice }}">
+          <View grow>
+            <Button variant="{{ reminderChoice ? 'secondary' : 'primary' }}" onClick="openReminderSheet"><Icon name="bell" /> {{ reminderChoice ? 'Reminder on' : 'Remind me' }}</Button>
+          </View>
+        </If>
+      </View>
     </Footer>
+
+    <Sheet open="{{ reminderSheetOpen }}" title="Remind me" showCloseIcon onClose="closeReminderSheet">
+      <View gap="large">
+        <Text tone="muted">{{ reminderChoice ? 'Set for ' + reminderWhen + '. Dash will send a notification that opens this event.' : 'Dash will send a notification that opens this event.' }}</Text>
+        <RadioGroup value="{{ reminderChoice }}" onChange="setReminder">
+          <For each="{{ reminderChoices }}" item="item" key="id">
+            <Radio value="{{ item.id }}" label="{{ item.label }}" />
+          </For>
+        </RadioGroup>
+        <If condition="{{ reminderChoice }}">
+          <Button variant="secondary" onClick="removeReminder">Turn off reminder</Button>
+        </If>
+      </View>
+    </Sheet>
   </ElseIf>
 </View>

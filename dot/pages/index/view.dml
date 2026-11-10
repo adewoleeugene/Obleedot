@@ -27,6 +27,25 @@
     <Button variant="secondary" onClick="load">Try again</Button>
   </ElseIf>
   <Else>
+    <!-- The person's own shelf: only there once they've saved something, and out of the way while
+         they search or filter. Small posters, so it never pushes Don't miss far down. -->
+    <If condition="{{ showFeatured && savedCards.length > 0 }}">
+      <View gap="medium">
+        <Text variant="title" weight="bold">Saved</Text>
+        <Scroll gap="medium">
+          <For each="{{ savedCards }}" item="card" key="id">
+            <View width="96" gap="small" data-id="{{ card.id }}" onTap="openEvent">
+              <Image src="{{ card.image }}" alt="Poster for {{ card.title }}" aspect="3:4" fit="cover" />
+              <View gap="none">
+                <Text variant="caption" weight="bold" tone="muted" maxLines="1">{{ card.dateLine }}</Text>
+                <Text variant="caption" weight="bold" leading="tight" maxLines="2">{{ card.title }}</Text>
+              </View>
+            </View>
+          </For>
+        </Scroll>
+      </View>
+    </If>
+
     <If condition="{{ showFeatured && featured.length > 0 }}">
       <View gap="medium">
         <Text variant="title" weight="bold">Don't miss</Text>

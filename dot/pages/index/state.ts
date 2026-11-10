@@ -26,6 +26,8 @@ export default {
   /** Every event, as loaded. */
   cards: [] as EventCard[],
   featured: [] as EventCard[],
+  /** The person's saved events that are still on, newest saved first. */
+  savedCards: [] as EventCard[],
   /** The events that match the search and category. */
   results: [] as EventCard[],
   /** The same events, grouped by month. */

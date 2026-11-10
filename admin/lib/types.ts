@@ -1,7 +1,7 @@
 // The event shape. The public API sends the dot exactly the `EventItem` fields; the admin
 // fields stay on the server. Keep EventItem in step with the dot's lib/types.ts.
 
-export const CATEGORIES = ['party', 'music', 'festival', 'culture', 'food'] as const;
+export const CATEGORIES = ['party', 'music', 'festival', 'culture', 'food', 'hangout'] as const;
 export type Category = (typeof CATEGORIES)[number];
 
 export const CATEGORY_LABELS: Record<Category, string> = {
@@ -10,6 +10,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   festival: 'Festivals',
   culture: 'Culture & art',
   food: 'Food & drink',
+  hangout: 'Hangouts',
 };
 
 export type Currency = 'SLE' | 'USD';

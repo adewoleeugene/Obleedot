@@ -11,7 +11,13 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   festival: 'Festivals',
   culture: 'Culture & art',
   food: 'Food & drink',
+  hangout: 'Hangouts',
 };
+
+/** The category's label, or '' for one this version of the dot doesn't know yet. */
+export function categoryLabel(category: string): string {
+  return (CATEGORY_LABELS as Record<string, string>)[category] ?? '';
+}
 
 function groupThousands(whole: number): string {
   return String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, ',');

@@ -91,3 +91,16 @@ describe('date filters', () => {
     expect(ids).not.toContain('today');
   });
 });
+
+describe('categories', () => {
+  it('knows Hangouts and shows its chip only when a hangout is on', async () => {
+    const { categoriesFor } = await import('../lib/cards');
+    const hangout = toCard({ ...byId('drizilik-audacity'), id: 'chill', category: 'hangout' });
+    expect(hangout.categoryLabel).toBe('Hangouts');
+    expect(categoriesFor([hangout]).map((c) => c.label)).toEqual(['Hangouts']);
+  });
+  it('shows an event from a category this version does not know, with no label', () => {
+    const future = toCard({ ...byId('drizilik-audacity'), category: 'sports' as never });
+    expect(future.categoryLabel).toBe('');
+  });
+});

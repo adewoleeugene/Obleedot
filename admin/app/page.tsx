@@ -59,7 +59,7 @@ export default async function EventsPage() {
             {live} live in the dot{upcoming.length > live ? ` · ${upcoming.length - live} draft` : ''}
           </p>
         </div>
-        <Link href="/events/new" className="btn btn-primary">New event</Link>
+        <Link href="/events/new" className="btn btn-primary">Add event</Link>
       </header>
 
       {upcoming.length === 0 ? (

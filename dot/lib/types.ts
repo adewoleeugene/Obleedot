@@ -3,7 +3,7 @@
 
 export type Currency = 'SLE' | 'USD';
 
-export type Category = 'music' | 'party' | 'festival' | 'culture' | 'food';
+export type Category = 'music' | 'party' | 'festival' | 'culture' | 'food' | 'hangout';
 
 export type TicketPrice = {
   id: string;

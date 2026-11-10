@@ -213,7 +213,7 @@ export function EventForm({ initial }: { initial?: StoredEvent }) {
         {editing && initial?.status === 'draft' && <span className="badge">Draft</span>}
       </div>
       <header className="masthead">
-        <h1 className="display">{editing ? 'Edit event' : 'New event'}</h1>
+        <h1 className="display">{editing ? 'Edit event' : 'Add event'}</h1>
       </header>
 
       {notice && <div className="notice" role="alert">{notice}</div>}

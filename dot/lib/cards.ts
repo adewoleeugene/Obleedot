@@ -1,5 +1,5 @@
 // Turns events into the plain rows the list pages show, and filters them.
-import { CATEGORY_LABELS, formatDateRange, formatShortDate, formatTime, isSoldOut, monthLabel, priceLabel, weekdayDate } from './format';
+import { CATEGORY_LABELS, categoryLabel, formatDateRange, formatShortDate, formatTime, isSoldOut, monthLabel, priceLabel, weekdayDate } from './format';
 import type { Category, EventItem } from './types';
 
 export type EventCard = {
@@ -54,7 +54,7 @@ export function toCard(event: EventItem): EventCard {
     image: event.image,
     banner: event.banner ?? '',
     category: event.category,
-    categoryLabel: CATEGORY_LABELS[event.category],
+    categoryLabel: categoryLabel(event.category),
     dateLabel: formatDateRange(event.date, event.endDate),
     subtitle: `${when(event)} · ${event.venue || event.city}`,
     when: when(event),
@@ -67,7 +67,7 @@ export function toCard(event: EventItem): EventCard {
     monthKey: event.date.slice(0, 7),
     date: event.date,
     endDate: event.endDate ?? '',
-    searchText: [event.title, event.venue, event.address, event.city, event.organizer, event.summary, CATEGORY_LABELS[event.category]]
+    searchText: [event.title, event.venue, event.address, event.city, event.organizer, event.summary, categoryLabel(event.category)]
       .join(' ')
       .toLowerCase(),
   };
@@ -81,7 +81,7 @@ export function filterCards(cards: readonly EventCard[], query: string, category
   );
 }
 
-const CATEGORY_ORDER: Category[] = ['party', 'music', 'festival', 'culture', 'food'];
+const CATEGORY_ORDER: Category[] = ['party', 'music', 'festival', 'culture', 'food', 'hangout'];
 
 /** Only the categories that have at least one event. No chip chosen means all of them. */
 export function categoriesFor(cards: readonly EventCard[]): { id: string; label: string }[] {

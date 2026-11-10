@@ -1,7 +1,7 @@
 import { errorMessage, isDashError, unlessCancelled } from '@monimesl/dot-runtime';
 
 import { getEvent } from '../../lib/api';
-import { CATEGORY_LABELS, TBA, formatDateRange, formatMoney, formatTimeRange, isSoldOut, priceLabel } from '../../lib/format';
+import { categoryLabel, TBA, formatDateRange, formatMoney, formatTimeRange, isSoldOut, priceLabel } from '../../lib/format';
 import { matchChoice, nowOnPhone, reminderChoices, reminderKey, reminderText, whenLabel } from '../../lib/reminders';
 import { savedIds, setSaved } from '../../lib/saved';
 import type { EventItem } from '../../lib/types';
@@ -23,8 +23,8 @@ function toDetails(event: EventItem): EventDetails {
     date: event.date,
     startTime: event.startTime,
     image: event.image,
-    categoryLabel: CATEGORY_LABELS[event.category],
-    kicker: [CATEGORY_LABELS[event.category], event.ageLimit].filter(Boolean).join(' · '),
+    categoryLabel: categoryLabel(event.category),
+    kicker: [categoryLabel(event.category), event.ageLimit].filter(Boolean).join(' · '),
     summary: event.summary,
     description: event.description,
     dateLabel: formatDateRange(event.date, event.endDate),
